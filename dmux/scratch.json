@@ -1,0 +1,11 @@
+{
+  "executable": "gdb",
+  "args": ["--interpreter=dap"],
+  "mode": "launch",
+  "waitForStopped": true,
+  "config": {
+    "program": "bin/RelWithDebInfo-reloadable/scratch",
+    "stopAtBeginningOfMainSubprogram": true
+  }
+}
+

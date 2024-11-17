@@ -2,7 +2,6 @@
 #define BGAME_ENTRYPOINT_H
 
 #define REMODULE_PLUGIN_IMPLEMENTATION
-#define REMODULE_HOST_IMPLEMENTATION
 #include "reloadable.h"
 #include "app.h"
 

@@ -1,9 +1,22 @@
 # --- cute_framework ---
-set(CF_FRAMEWORK_STATIC $<NOT:$<BOOL:${RELOADABLE}>> CACHE BOOL "")
+if (${RELOADABLE})
+	set(CF_FRAMEWORK_STATIC OFF CACHE BOOL "")
+else ()
+	set(CF_FRAMEWORK_STATIC ON CACHE BOOL "")
+endif ()
 set(CF_FRAMEWORK_BUILD_SAMPLES OFF CACHE BOOL "")
 set(CF_FRAMEWORK_BUILD_TESTS OFF CACHE BOOL "")
 
 add_subdirectory("cute_framework" EXCLUDE_FROM_ALL)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	if (TARGET SDL3-shared)
+		get_target_property(current_link_options SDL3-shared LINK_OPTIONS)
+		list(REMOVE_ITEM current_link_options "-Wl,--no-undefined")
+		target_link_options(SDL3-shared PRIVATE "${current_link_options}")
+		set_target_properties(SDL3-shared PROPERTIES LINK_OPTIONS "${current_link_options}")
+	endif ()
+endif ()
 
 # Make the include path system so that targets linking to cute framework can
 # use a stricter warning settings.

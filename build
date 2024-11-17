@@ -10,20 +10,21 @@ else
 	SUFFIX="static"
 fi
 
-BUILD_DIR=".build/${BUILD_TYPE}-${SUFFIX}"
+BUILD_DIR="${BUILD_TYPE}-${SUFFIX}"
 
-mkdir -p ${BUILD_DIR}
-cd ${BUILD_DIR}
+mkdir -p .build
+cd .build
 
-if [ ! -f build.ninja ]
+if [ ! -f "${BUILD_DIR}/build.ninja" ]
 then
 	cmake \
 		-G "Ninja" \
+		-B ${BUILD_DIR} \
 		-DCMAKE_TOOLCHAIN_FILE=../../cmake/linux.cmake \
 		-DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
 		-DRELOADABLE="${RELOADABLE}" \
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-		../../
+		../
 fi
 
-cmake --build .
+cmake --build ${BUILD_DIR}

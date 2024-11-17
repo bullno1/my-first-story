@@ -1,22 +1,17 @@
 #include <bgame/reloadable.h>
-#include <bgame/app.h>
-#include <cute_app.h>
-
-#if BGAME_RELOADABLE
-
-#include <bresmon.h>
-
-typedef struct {
-	int argc;
-	const char** argv;
-	bgame_app_t app;
-} bgame_loader_interface_t;
+#include <pico_log.h>
+#include "loader_interface.h"
 
 static void
-reload_module(const char* path, void* module) {
-	printf("Reloading %s\n", path);
-	remodule_reload(module);
+bgame_init_logger(void) {
+	log_appender_t id = log_add_stream(stderr, LOG_LEVEL_TRACE);
+	log_set_time_fmt(id, "%H:%M:%S");
+	log_display_colors(id, true);
+	log_display_timestamp(id, true);
+	log_display_file(id, true);
 }
+
+#if BGAME_RELOADABLE
 
 void
 bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
@@ -24,74 +19,46 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 
 	switch (op) {
 		case REMODULE_OP_LOAD:
+			bgame_init_logger();
 			loader_interface->app = app;
+			log_info("App loaded");
 			break;
 		case REMODULE_OP_UNLOAD:
+			log_info("Unloading app");
 			break;
 		case REMODULE_OP_BEFORE_RELOAD:
+			log_info("Reloading app");
 			if (app.before_reload != NULL) {
 				app.before_reload();
 			}
 			break;
 		case REMODULE_OP_AFTER_RELOAD:
+			bgame_init_logger();  // Logger contains callbacks
+			log_info("App reloaded");
 			loader_interface->app = app;
 			if (app.after_reload != NULL) {
 				app.after_reload();
 			}
+			log_info("Reinitializing");
 			app.init(loader_interface->argc, loader_interface->argv);
+			log_info("Reinitialized");
 			break;
 	}
 }
 
-int
-bgame_loader_main(const char* name, int argc, const char** argv) {
-	bgame_loader_interface_t loader_interface = {
-		.argc = argc,
-		.argv = argv,
-	};
-
-	remodule_t* module = remodule_load(name, &loader_interface);
-	bresmon_t* monitor = bresmon_create(NULL);
-	bresmon_watch(monitor, remodule_path(module), reload_module, module);
-
-	loader_interface.app.init(argc, argv);
-
-	while (cf_app_is_running()) {
-		loader_interface.app.update();
-
-		if (bresmon_should_reload(monitor, false)) {
-			printf("Reloading\n");
-			bresmon_reload(monitor);
-			printf("Reloaded\n");
-		}
-	}
-
-	loader_interface.app.cleanup();
-
-	bresmon_destroy(monitor);
-	remodule_unload(module);
-
-	return 0;
-}
-
 #else
+
+#include <cute_app.h>
 
 int
 bgame_static(bgame_app_t app, int argc, const char** argv) {
+	bgame_init_logger();
 	app.init(argc, argv);
 	while (cf_app_is_running()) {
 		app.update();
 	}
 	app.cleanup();
 	return 0;
-}
-
-extern int bgame_entry(int argc, const char** argv);
-
-int
-bgame_loader_main(const char* name, int argc, const char** argv) {
-	(void)name;
-	return bgame_entry(argc, argv);
 }
 
 #endif

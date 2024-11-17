@@ -61,9 +61,8 @@ function (add_bgame_app NAME SOURCES)
 			PREFIX ""
 		)
 
-		add_executable(${NAME}-loader "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bgame/loader.c")
-		target_compile_definitions(${NAME}-loader PRIVATE BGAME_APP_NAME=${NAME})
-		target_link_libraries(${NAME}-loader PRIVATE bgame)
+		add_executable(${NAME}-loader "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bgame/src/loader_stub.c")
+		target_link_libraries(${NAME}-loader PRIVATE bgame-loader)
 		set_target_properties(${NAME}-loader PROPERTIES
 			OUTPUT_NAME "${NAME}"
 			PREFIX ""
@@ -72,9 +71,8 @@ function (add_bgame_app NAME SOURCES)
 		add_library(${NAME} STATIC ${SOURCES})
 		target_link_libraries(${NAME} PRIVATE bgame)
 
-		add_executable(${NAME}-loader "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bgame/loader.c")
-		target_compile_definitions(${NAME}-loader PRIVATE BGAME_APP_NAME=${NAME})
-		target_link_libraries(${NAME}-loader PRIVATE bgame ${NAME})
+		add_executable(${NAME}-loader "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bgame/src/loader_stub.c")
+		target_link_libraries(${NAME}-loader PRIVATE bgame-loader ${NAME})
 		set_target_properties(${NAME}-loader PROPERTIES
 			OUTPUT_NAME "${NAME}"
 			PREFIX ""
