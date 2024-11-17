@@ -1,6 +1,8 @@
 #include <bgame/entrypoint.h>
+#include <bgame/allocator.h>
 #include <bgame/scene.h>
 #include <stdbool.h>
+#include <inttypes.h>
 #include <pico_log.h>
 #include <cute_app.h>
 
@@ -31,8 +33,21 @@ init(int argc, const char** argv) {
 }
 
 static void
+report_allocator_stats(
+	const char* name,
+	bgame_tracked_allocator_t* allocator,
+	void* userdata
+) {
+	log_debug("%s: Total %" PRId64 ", Peak %" PRId64, name, allocator->total, allocator->peak);
+}
+
+static void
 cleanup(void) {
+	bgame_set_scene(NULL);
 	cf_destroy_app();
+
+	log_debug("--- Allocator stats ---");
+	bgame_enumerate_tracked_allocators(report_allocator_stats, NULL);
 }
 
 static bgame_app_t app = {

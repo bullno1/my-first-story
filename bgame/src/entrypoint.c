@@ -11,6 +11,15 @@ bgame_init_logger(void) {
 	log_display_file(id, true);
 }
 
+extern void
+bgame_init_allocators(void);
+
+static void
+bgame_init(void) {
+	bgame_init_logger();
+	bgame_init_allocators();
+}
+
 #if BGAME_RELOADABLE
 
 void
@@ -19,7 +28,7 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 
 	switch (op) {
 		case REMODULE_OP_LOAD:
-			bgame_init_logger();
+			bgame_init();
 			loader_interface->app = app;
 			log_info("App loaded");
 			break;
@@ -33,7 +42,8 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 			}
 			break;
 		case REMODULE_OP_AFTER_RELOAD:
-			bgame_init_logger();  // Logger contains callbacks
+			bgame_init();
+
 			log_info("App reloaded");
 			loader_interface->app = app;
 			if (app.after_reload != NULL) {
@@ -52,13 +62,14 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 
 int
 bgame_static(bgame_app_t app, int argc, const char** argv) {
-	bgame_init_logger();
+	bgame_init();
 
 	app.init(argc, argv);
 	while (cf_app_is_running()) {
 		app.update();
 	}
 	app.cleanup();
+
 	return 0;
 }
 

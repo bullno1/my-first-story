@@ -31,17 +31,22 @@ bgame_find_scene(const char* name, size_t name_len) {
 
 void
 bgame_set_scene(const char* name) {
-	size_t name_len = strlen(name);
-	if (name_len > sizeof(g_bgame_current_scene_name)) {
-		log_error("Scene name is too long: %s", name);
-		return;
-	}
+	bgame_scene_t* target_scene = NULL;
+	size_t name_len = 0;
 
-	bgame_scene_t* target_scene = bgame_find_scene(name, name_len);
-	if (target_scene == NULL) {
-		log_error("Could not find scene: %s", name);
-		if (g_bgame_current_scene == NULL) { exit(1); }
-		return;
+	if (name != NULL) {
+		name_len = strlen(name);
+		if (name_len > sizeof(g_bgame_current_scene_name)) {
+			log_error("Scene name is too long: %s", name);
+			return;
+		}
+
+		target_scene = bgame_find_scene(name, name_len);
+		if (target_scene == NULL) {
+			log_error("Could not find scene: %s", name);
+			if (g_bgame_current_scene == NULL) { exit(1); }
+			return;
+		}
 	}
 
 	if (g_bgame_current_scene != NULL && g_bgame_current_scene->cleanup != NULL) {
@@ -50,10 +55,12 @@ bgame_set_scene(const char* name) {
 	}
 
 	g_bgame_current_scene = target_scene;
-	memcpy(g_bgame_current_scene_name, name, name_len);
+	if (name != NULL) {
+		memcpy(g_bgame_current_scene_name, name, name_len);
+	}
 	g_bgame_current_scene_name_len = name_len;
 
-	if (target_scene->init != NULL) {
+	if (target_scene && target_scene->init != NULL) {
 		log_info("Initializing scene %s", g_bgame_current_scene_name);
 		target_scene->init(0, NULL);
 	}
