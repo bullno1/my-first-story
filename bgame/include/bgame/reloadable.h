@@ -1,0 +1,17 @@
+#ifndef BGAME_RELOADABLE_H
+#define BGAME_RELOADABLE_H
+
+#ifndef BGAME_RELOADABLE
+#	define BGAME_RELOADABLE 0
+#endif
+
+#if BGAME_RELOADABLE
+#	include <remodule.h>
+#	define BGAME_VAR(TYPE, VAR) REMODULE_VAR(TYPE, VAR)
+#	define BGAME_PERSIST_VAR(NAME) REMODULE_PERSIST_VAR(NAME)
+#else
+#	define BGAME_VAR(TYPE, VAR) TYPE VAR
+#	define BGAME_PERSIST_VAR(NAME)
+#endif
+
+#endif
