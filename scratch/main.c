@@ -2,9 +2,7 @@
 #include <bgame/scene.h>
 #include <stdbool.h>
 #include <pico_log.h>
-#include <cute_graphics.h>
 #include <cute_app.h>
-#include <cute_draw.h>
 
 BGAME_VAR(bool, app_created) = false;
 
