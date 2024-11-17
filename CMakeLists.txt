@@ -3,18 +3,17 @@ project(my-first-story)
 
 option(RELOADABLE "Is the program reloadable" ON)
 
-#include(CheckIPOSupported)
-#check_ipo_supported(RESULT IPO_SUPPORTED)
-#if (IPO_SUPPORTED)
-	#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-	#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
-#endif ()
-
 # Fix output dir
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>-$<IF:$<BOOL:${RELOADABLE}>,reloadable,static>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>-$<IF:$<BOOL:${RELOADABLE}>,reloadable,static>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>-$<IF:$<BOOL:${RELOADABLE}>,reloadable,static>)
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+if (IPO_SUPPORTED AND (NOT RELOADABLE))
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
+endif ()
 
 # Add deps first
 
@@ -46,7 +45,7 @@ function (setup_library LIBRARY_NAME TYPE SOURCES)
 endfunction ()
 
 function (add_bgame_app NAME SOURCES)
-	if (${RELOADABLE})
+	if (RELOADABLE)
 		add_library(${NAME} SHARED ${SOURCES})
 		set_target_properties(${NAME} PROPERTIES C_VISIBILITY_PRESET hidden)
 		target_link_libraries(${NAME} PRIVATE bgame)
@@ -84,7 +83,15 @@ if (MSVC)
 	# 4200: Flexible array member is a standard feature since C99
 	add_compile_options(/W4 /WX /wd4200)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-	# MSVC does not define max_align_t
+
+	# Because CMake can't set proper flags even with CMAKE_INTERPROCEDURAL_OPTIMIZATION_Release
+	if (NOT RELOADABLE)
+		set(RELEASE_COMPILER_FLAGS "/Gy;/Ob2;/GL;/Oi")
+		set(RELEASE_LINKER_FLAGS "/LTCG")
+
+		add_compile_options("$<$<CONFIG:RelWithDebInfo>:${RELEASE_COMPILER_FLAGS}>")
+		add_link_options("$<$<CONFIG:RelWithDebInfo>:${RELEASE_LINKER_FLAGS}>")
+	endif ()
 else()
 	add_compile_options(
 		-Wall -Wextra -pedantic -Werror

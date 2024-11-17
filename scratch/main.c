@@ -38,7 +38,6 @@ fixed_update(void* udata) {
 static void
 update(void) {
 	cf_app_update(fixed_update);
-
 	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
 
 	cf_app_draw_onto_screen(true);
