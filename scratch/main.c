@@ -1,4 +1,5 @@
 #include <bgame/entrypoint.h>
+#include <bgame/scene.h>
 #include <stdbool.h>
 #include <pico_log.h>
 #include <cute_graphics.h>
@@ -8,6 +9,8 @@
 BGAME_VAR(bool, app_created) = false;
 
 static const char* WINDOW_TITLE = "bgame scratch";
+
+extern bgame_scene_t* main_scene;
 
 static void
 init(int argc, const char** argv) {
@@ -23,6 +26,10 @@ init(int argc, const char** argv) {
 	cf_set_fixed_timestep(30);
 	cf_app_set_vsync(true);
 	cf_app_set_title(WINDOW_TITLE);
+
+	if (bgame_current_scene() == NULL) {
+		bgame_set_scene("main_scene");
+	}
 }
 
 static void
@@ -30,23 +37,12 @@ cleanup(void) {
 	cf_destroy_app();
 }
 
-static void
-fixed_update(void* udata) {
-	(void)udata;
-}
-
-static void
-update(void) {
-	cf_app_update(fixed_update);
-	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
-
-	cf_app_draw_onto_screen(true);
-}
-
 static bgame_app_t app = {
 	.init = init,
-	.update = update,
 	.cleanup = cleanup,
+	.update = bgame_scene_update,
+	.before_reload = bgame_scene_before_reload,
+	.after_reload = bgame_scene_after_reload,
 };
 
 BGAME_ENTRYPOINT(app)

@@ -53,6 +53,7 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 int
 bgame_static(bgame_app_t app, int argc, const char** argv) {
 	bgame_init_logger();
+
 	app.init(argc, argv);
 	while (cf_app_is_running()) {
 		app.update();

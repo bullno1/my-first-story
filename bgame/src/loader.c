@@ -79,8 +79,7 @@ bgame_main(int argc, const char* argv[]) {
 extern int bgame_entry(int argc, const char** argv);
 
 int
-bgame_main(const char* name, int argc, const char** argv) {
-	(void)name;
+bgame_main(int argc, const char** argv) {
 	return bgame_entry(argc, argv);
 }
 
