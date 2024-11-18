@@ -1,42 +1,67 @@
 #ifndef BGAME_ASSET_H
 #define BGAME_ASSET_H
 
+#include <autolist.h>
 #include <stddef.h>
+#include <stdbool.h>
 
-typedef void* (*basset_load_fn)(void* previous_instance, const char* path, const void* args);
-typedef void (*basset_unload_fn)(void* asset);
+#define BGAME_ASSET_TYPE(NAME) \
+	AUTOLIST_ENTRY(bgame_asset_type_list, bgame_asset_type_t, NAME)
 
-typedef struct basset_def_s {
+typedef struct bgame_asset_bundle_s bgame_asset_bundle_t;
+
+typedef enum {
+	BGAME_ASSET_LOADED,
+	BGAME_ASSET_UNCHANGED,
+	BGAME_ASSET_ERROR,
+} bgame_asset_load_result_t;
+
+typedef bgame_asset_load_result_t (*bgame_asset_load_fn_t)(
+	bgame_asset_bundle_t* bundle,
+	void* asset,
+	const char* path,
+	const void* args
+);
+typedef void (*bgame_asset_unload_fn_t)(
+	bgame_asset_bundle_t* bundle,
+	void* asset
+);
+
+typedef struct bgame_asset_type_s {
 	const char* name;
 
-	size_t arg_size;
-	basset_load_fn load;
-	basset_unload_fn unload;
-} basset_def_t;
-
-typedef struct basset_bundle_s basset_bundle_t;
+	size_t size;
+	bgame_asset_load_fn_t load;
+	bgame_asset_unload_fn_t unload;
+} bgame_asset_type_t;
 
 void
-basset_register(const basset_def_t* def);
+bgame_begin_load_assets(bgame_asset_bundle_t** bundle_ptr);
 
-void
-basset_begin_bundle(basset_bundle_t** bundle_ptr);
+bool
+bgame_file_changed(bgame_asset_bundle_t* bundle, const char* file);
 
-void
-basset_declare(
-	basset_bundle_t* bundle,
-	void** asset_ptr,
+void*
+bgame_load_asset(
+	bgame_asset_bundle_t* bundle,
+	const char* type,
 	const char* path,
 	const void* args
 );
 
 void
-basset_end_bundle(basset_bundle_t* bundle);
+bgame_end_load_assets(bgame_asset_bundle_t* bundle);
+
+void*
+bgame_asset_malloc(bgame_asset_bundle_t* bundle, size_t size);
 
 void
-basset_load_bundle(basset_bundle_t* bundle);
+bgame_asset_free(bgame_asset_bundle_t* bundle, void* ptr);
 
 void
-basset_destroy_bundle(basset_bundle_t* bundle);
+bgame_check_assets(bgame_asset_bundle_t* bundle);
+
+void
+bgame_unload_assets(bgame_asset_bundle_t* bundle);
 
 #endif

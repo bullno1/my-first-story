@@ -2,6 +2,7 @@
 #include <bgame/reloadable.h>
 #include <bgame/allocator.h>
 #include <bgame/ui.h>
+#include <bgame/asset/9patch.h>
 #include <cute_app.h>
 #include <cute_input.h>
 #include <cute_draw.h>
@@ -39,7 +40,7 @@ bgame_ui_init(void) {
 
 	if (!bgame_ui_created) {
 		size_t mem_size = Clay_MinMemorySize();
-		void* memory = bgame_malloc(mem_size, &bgame_ui.allocator);
+		void* memory = bgame_malloc(mem_size, bgame_ui);
 		bgame_ui_ctx.clay_arena = Clay_CreateArenaWithCapacityAndMemory(mem_size, memory);
 
 		bgame_ui_created = true;
@@ -128,10 +129,10 @@ bgame_ui_end(void) {
 					);
 					cf_draw_pop_color();
 				} else {
-					/*cute_9_patch_draw(*/
-						/*cmd.config.rectangleElementConfig->nine_patch,*/
-						/*cute_clay_aabb(cmd.boundingBox)*/
-					/*);*/
+					bgame_draw_9patch(
+						cmd.config.rectangleElementConfig->nine_patch,
+						bgame_ui_aabb(cmd.boundingBox)
+					);
 				}
 				break;
 			case CLAY_RENDER_COMMAND_TYPE_BORDER:

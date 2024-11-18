@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include <autolist.h>
-#include <stdatomic.h>
 #include "reloadable.h"
 
 typedef struct bgame_allocator_s {
@@ -27,20 +26,18 @@ bgame_free(void* ptr, bgame_allocator_t* allocator) {
 
 extern bgame_allocator_t* bgame_default_allocator;
 
-typedef struct bgame_tracked_allocator_s {
-	bgame_allocator_t allocator;
-
-	atomic_int_fast64_t total;
-	atomic_int_fast64_t peak;
-} bgame_tracked_allocator_t;
-
 #define BGAME_DECLARE_TRACKED_ALLOCATOR(NAME) \
-	AUTOLIST_ENTRY(bgame_tracked_allocator, bgame_tracked_allocator_t, NAME) = { 0 }; \
+	AUTOLIST_ENTRY(bgame_tracked_allocator, bgame_allocator_t*, NAME) = NULL; \
 	BGAME_PERSIST_VAR(NAME)
+
+typedef struct bgame_allocator_stats_s {
+	size_t total;
+	size_t peak;
+} bgame_allocator_stats_t;
 
 void
 bgame_enumerate_tracked_allocators(
-	void (*fn)(const char* name, bgame_tracked_allocator_t* allocator, void* userdata),
+	void (*fn)(const char* name, bgame_allocator_stats_t stats, void* userdata),
 	void* userdata
 );
 

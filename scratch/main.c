@@ -1,9 +1,9 @@
 #include <bgame/entrypoint.h>
 #include <bgame/allocator.h>
 #include <bgame/scene.h>
+#include <bgame/log.h>
 #include <stdbool.h>
 #include <inttypes.h>
-#include <pico_log.h>
 #include <cute_app.h>
 
 BGAME_VAR(bool, app_created) = false;
@@ -35,10 +35,10 @@ init(int argc, const char** argv) {
 static void
 report_allocator_stats(
 	const char* name,
-	bgame_tracked_allocator_t* allocator,
+	bgame_allocator_stats_t stats,
 	void* userdata
 ) {
-	log_debug("%s: Total %" PRId64 ", Peak %" PRId64, name, allocator->total, allocator->peak);
+	log_debug("%s: Total %" PRId64 ", Peak %" PRId64, name, stats.total, stats.peak);
 }
 
 static void

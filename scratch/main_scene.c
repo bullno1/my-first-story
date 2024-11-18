@@ -2,7 +2,8 @@
 #include <bgame/allocator.h>
 #include <bgame/scene.h>
 #include <bgame/ui.h>
-#include <clay.h>
+#include <bgame/asset.h>
+#include <bgame/asset/9patch.h>
 #include <cute_app.h>
 #include <cute_draw.h>
 #include <cute_sprite.h>
@@ -15,6 +16,10 @@ typedef BHASH_TABLE(const char*, CF_Sprite) sprite_table_t;
 BGAME_VAR(CF_Sprite, sprite) = { 0 };
 BGAME_VAR(sprite_table_t, sprite_instances) = { 0 };
 
+BGAME_VAR(bgame_asset_bundle_t*, main_scene_assets) = NULL;
+
+static bgame_9patch_t* window_border = NULL;
+
 static void
 init(int argc, const char** argv) {
 	if (!sprite.name) {
@@ -22,19 +27,28 @@ init(int argc, const char** argv) {
 	}
 
 	bhash_config_t config = bhash_config_default();
-	config.memctx = &main_scene_alloc.allocator;
-	if (sprite_instances.keys == NULL) {
-		bhash_init(&sprite_instances, config);
-	}
-	sprite_instances.base.memctx = &main_scene_alloc.allocator;
-	sprite_instances.base.hash = config.hash;
-	sprite_instances.base.eq = config.eq;
+	config.memctx = main_scene_alloc;
+	bhash_reinit(&sprite_instances, config);
 
 	Clay_SetDebugModeEnabled(true);
+
+	bgame_begin_load_assets(&main_scene_assets);
+	window_border = bgame_load_9patch(
+		main_scene_assets,
+		"assets/frame.png",
+		(bgame_9patch_config_t) {
+			.left = 25,
+			.right = 25,
+			.top = 25,
+			.bottom = 25,
+		}
+	);
+	bgame_end_load_assets(main_scene_assets);
 }
 
 static void
 cleanup(void) {
+	bgame_unload_assets(main_scene_assets);
 	bhash_cleanup(&sprite_instances);
 }
 
@@ -45,6 +59,8 @@ fixed_update(void* udata) {
 
 static void
 update(void) {
+	bgame_check_assets(main_scene_assets);
+
 	cf_app_update(fixed_update);
 	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
 
@@ -65,7 +81,7 @@ update(void) {
 			.padding = { 16, 16 },
 			.childGap = 16
 		}),
-		CLAY_RECTANGLE({ .color = root_bg })
+		CLAY_RECTANGLE({ .color = root_bg, .nine_patch = window_border })
 	) {
 
 		CLAY(
@@ -107,7 +123,7 @@ update(void) {
 			}),
 			CLAY_RECTANGLE({
 				.color = sidebar_bg,
-				.cornerRadius.topLeft = 10.f,
+				.nine_patch = window_border,
 			})
 		) {
 			CLAY_TEXT(

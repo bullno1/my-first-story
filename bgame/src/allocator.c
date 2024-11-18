@@ -1,6 +1,7 @@
 #include <bgame/allocator.h>
 #include <cute_alloc.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <pico_log.h>
 #include <cute_app.h>
 
@@ -28,13 +29,27 @@ typedef struct {
 
 AUTOLIST_DECLARE(bgame_tracked_allocator)
 
+typedef struct bgame_tracked_allocator_s {
+	bgame_allocator_t allocator;
+
+	atomic_int_fast64_t total;
+	atomic_int_fast64_t peak;
+} bgame_tracked_allocator_t;
+
 void
 bgame_enumerate_tracked_allocators(
-	void (*fn)(const char* name, bgame_tracked_allocator_t* allocator, void* userdata),
+	void (*fn)(const char* name, bgame_allocator_stats_t stats, void* userdata),
 	void* userdata
 ) {
 	AUTOLIST_FOREACH(itr, bgame_tracked_allocator) {
-		fn((*itr)->name, (*itr)->value_addr, userdata);
+		bgame_tracked_allocator_t** allocator_ptr = (*itr)->value_addr;
+		if (*allocator_ptr == NULL) { continue; }
+
+		bgame_allocator_stats_t stats = {
+			.peak = (size_t)atomic_load_explicit(&(*allocator_ptr)->peak, memory_order_relaxed),
+			.total = (size_t)atomic_load_explicit(&(*allocator_ptr)->total, memory_order_relaxed),
+		};
+		fn((*itr)->name, stats, userdata);
 	}
 }
 
@@ -81,30 +96,24 @@ bgame_tracked_allocator_realloc(void* ptr, size_t size, bgame_allocator_t* ctx) 
 	}
 }
 
-static void
-bgame_init_tracked_allocator(const char* name, bgame_tracked_allocator_t* allocator, void* userdata) {
-	(void)userdata;
-	allocator->allocator.realloc = bgame_tracked_allocator_realloc;
-}
-
 BGAME_DECLARE_TRACKED_ALLOCATOR(cute_framework)
 
 static void*
 bgame_cf_allocator_alloc(size_t size, void* udata) {
 	(void)udata;
-	return bgame_malloc(size, &cute_framework.allocator);
+	return bgame_malloc(size, cute_framework);
 }
 
 static void
 bgame_cf_allocator_free(void* ptr, void* udata) {
 	(void)udata;
-	bgame_free(ptr, &cute_framework.allocator);
+	bgame_free(ptr, cute_framework);
 }
 
 static void*
 bgame_cf_allocator_calloc(size_t size, size_t count, void* udata) {
 	(void)udata;
-	void* mem = bgame_malloc(size * count, &cute_framework.allocator);
+	void* mem = bgame_malloc(size * count, cute_framework);
 	memset(mem, 0, size * count);
 	return mem;
 }
@@ -112,7 +121,7 @@ bgame_cf_allocator_calloc(size_t size, size_t count, void* udata) {
 static void*
 bgame_cf_allocator_realloc(void* ptr, size_t size, void* udata) {
 	(void)udata;
-	return bgame_realloc(ptr, size, &cute_framework.allocator);
+	return bgame_realloc(ptr, size, cute_framework);
 }
 
 CF_Allocator bgame_cf_allocator = {
@@ -124,6 +133,23 @@ CF_Allocator bgame_cf_allocator = {
 
 void
 bgame_init_allocators(void) {
-	bgame_enumerate_tracked_allocators(bgame_init_tracked_allocator, NULL);
 	cf_allocator_override(bgame_cf_allocator);
+
+	AUTOLIST_FOREACH(itr, bgame_tracked_allocator) {
+		bgame_tracked_allocator_t** allocator_ptr = (*itr)->value_addr;
+
+		if (*allocator_ptr == NULL) {
+			bgame_tracked_allocator_t* allocator = bgame_malloc(
+				sizeof(bgame_tracked_allocator_t), bgame_default_allocator
+			);
+
+			*allocator = (bgame_tracked_allocator_t){
+				.allocator.realloc = bgame_tracked_allocator_realloc,
+			};
+
+			*allocator_ptr = allocator;
+		} else {
+			(*allocator_ptr)->allocator.realloc = bgame_tracked_allocator_realloc;
+		}
+	}
 }

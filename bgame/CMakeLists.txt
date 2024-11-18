@@ -4,6 +4,8 @@ set(SOURCES
 	"src/libs.c"
 	"src/allocator.c"
 	"src/ui.c"
+	"src/asset.c"
+	"src/asset/9patch.c"
 )
 
 add_library(bgame STATIC "${SOURCES}")
