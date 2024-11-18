@@ -1,12 +1,18 @@
 #ifndef BGAME_ASSET_H
 #define BGAME_ASSET_H
 
+#include <bgame/reloadable.h>
 #include <autolist.h>
 #include <stddef.h>
 #include <stdbool.h>
 
-#define BGAME_ASSET_TYPE(NAME) \
+#if BGAME_RELOADABLE
+#	define BGAME_ASSET_TYPE(NAME) \
 	AUTOLIST_ENTRY(bgame_asset_type_list, bgame_asset_type_t, NAME)
+#else
+#	define BGAME_ASSET_TYPE(NAME) \
+	static bgame_asset_type_t NAME
+#endif
 
 typedef struct bgame_asset_bundle_s bgame_asset_bundle_t;
 
@@ -29,28 +35,30 @@ typedef void (*bgame_asset_unload_fn_t)(
 
 typedef struct bgame_asset_type_s {
 	const char* name;
-
 	size_t size;
 	bgame_asset_load_fn_t load;
 	bgame_asset_unload_fn_t unload;
 } bgame_asset_type_t;
 
 void
-bgame_begin_load_assets(bgame_asset_bundle_t** bundle_ptr);
+bgame_asset_begin_load(bgame_asset_bundle_t** bundle_ptr);
 
 bool
-bgame_file_changed(bgame_asset_bundle_t* bundle, const char* file);
+bgame_asset_source_changed(bgame_asset_bundle_t* bundle, void* asset);
 
 void*
-bgame_load_asset(
+bgame_asset_load(
 	bgame_asset_bundle_t* bundle,
-	const char* type,
+	bgame_asset_type_t* type,
 	const char* path,
 	const void* args
 );
 
 void
-bgame_end_load_assets(bgame_asset_bundle_t* bundle);
+bgame_asset_unload(bgame_asset_bundle_t* bundle, void* asset);
+
+void
+bgame_asset_end_load(bgame_asset_bundle_t* bundle);
 
 void*
 bgame_asset_malloc(bgame_asset_bundle_t* bundle, size_t size);
@@ -59,9 +67,9 @@ void
 bgame_asset_free(bgame_asset_bundle_t* bundle, void* ptr);
 
 void
-bgame_check_assets(bgame_asset_bundle_t* bundle);
+bgame_asset_check_bundle(bgame_asset_bundle_t* bundle);
 
 void
-bgame_unload_assets(bgame_asset_bundle_t* bundle);
+bgame_asset_destroy_bundle(bgame_asset_bundle_t* bundle);
 
 #endif

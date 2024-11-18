@@ -2,8 +2,7 @@
 #define BGAME_ASSET_9PATCH_H
 
 #include <bgame/asset.h>
-#include <cute_image.h>
-#include <cute_sprite.h>
+#include <cute_math.h>
 
 struct bgame_asset_bundle_s;
 

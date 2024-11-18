@@ -32,7 +32,7 @@ init(int argc, const char** argv) {
 
 	Clay_SetDebugModeEnabled(true);
 
-	bgame_begin_load_assets(&main_scene_assets);
+	bgame_asset_begin_load(&main_scene_assets);
 	window_border = bgame_load_9patch(
 		main_scene_assets,
 		"assets/frame.png",
@@ -43,12 +43,12 @@ init(int argc, const char** argv) {
 			.bottom = 25,
 		}
 	);
-	bgame_end_load_assets(main_scene_assets);
+	bgame_asset_end_load(main_scene_assets);
 }
 
 static void
 cleanup(void) {
-	bgame_unload_assets(main_scene_assets);
+	bgame_asset_destroy_bundle(main_scene_assets);
 	bhash_cleanup(&sprite_instances);
 }
 
@@ -59,7 +59,7 @@ fixed_update(void* udata) {
 
 static void
 update(void) {
-	bgame_check_assets(main_scene_assets);
+	bgame_asset_check_bundle(main_scene_assets);
 
 	cf_app_update(fixed_update);
 	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
@@ -81,7 +81,7 @@ update(void) {
 			.padding = { 16, 16 },
 			.childGap = 16
 		}),
-		CLAY_RECTANGLE({ .color = root_bg, .nine_patch = window_border })
+		CLAY_RECTANGLE({ .color = root_bg })
 	) {
 
 		CLAY(
@@ -98,6 +98,7 @@ update(void) {
 			CLAY_RECTANGLE({
 				.color = sidebar_bg,
 				.cornerRadius.topLeft = 10.f,
+				.nine_patch = window_border,
 			})
 		) {
 			CLAY_TEXT(

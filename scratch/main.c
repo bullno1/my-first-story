@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <cute_app.h>
+#include <cute_file_system.h>
 
 BGAME_VAR(bool, app_created) = false;
 
@@ -19,6 +20,16 @@ init(int argc, const char** argv) {
 		log_info("Creating app");
 		int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
 		cf_make_app(WINDOW_TITLE, 0, 0, 0, 1280, 720, options, argv[0]);
+
+		// Mount assets dir
+		char* base_dir = spnorm(cf_fs_get_base_directory());
+		char* dir = sppopn(base_dir, 2);
+		scat(dir, "/assets");
+		CF_Result result = cf_fs_mount(dir, "/assets", true);
+		if (result.code != CF_RESULT_SUCCESS) {
+			log_warn("Could not mount %s: %s", dir, result.details);
+		}
+		sfree(dir);
 
 		app_created = true;
 	}
