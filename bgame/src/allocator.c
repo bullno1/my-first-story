@@ -40,7 +40,7 @@ bgame_enumerate_tracked_allocators(
 
 static void
 bgame_tracked_allocator_adjust(bgame_tracked_allocator_t* allocator, int_fast64_t change) {
-	int_fast64_t total = atomic_fetch_add(&allocator->total, change);
+	int_fast64_t total = atomic_fetch_add(&allocator->total, change) + change;
 
 	if (change > 0) {
 		int_fast64_t peak = atomic_load(&allocator->peak);

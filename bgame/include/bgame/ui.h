@@ -15,4 +15,14 @@ bgame_ui_begin(void);
 void
 bgame_ui_end(void);
 
+static inline Clay_Color
+bgame_ui_color(CF_Color color) {
+	return (Clay_Color) {
+		.r = color.r * 255.f,
+		.g = color.g * 255.f,
+		.b = color.b * 255.f,
+		.a = color.a * 255.f,
+	};
+}
+
 #endif
