@@ -148,13 +148,13 @@ bgame_asset_init(void) {
 		if (bhash_is_valid(entry_index)) {
 			canonical_type = bgame_asset_registry.values[entry_index];
 			*canonical_type = *type;
-			log_debug("Updated asset type: %s", entry->name);
+			log_debug("Updated asset type: %s", type->name);
 		} else {
 			canonical_type = bgame_malloc(sizeof(bgame_asset_type_t), bgame_asset);
 			*canonical_type = *type;
 			bgame_str_t type_name = bgame_asset_strcpy(entry->name);
 			bhash_put(&bgame_asset_registry, type_name, canonical_type);
-			log_debug("Registered asset type: %s", entry->name);
+			log_debug("Registered asset type: %s", type->name);
 		}
 
 		bhash_put(&bgame_asset_type_translation, type, canonical_type);
