@@ -155,7 +155,8 @@ bgame_ui_end(void) {
 					if (animator->transition) {
 						animator->transition(&animated_cmd, cmd_to_animate);
 					}
-					*cmd_to_animate = animated_cmd;
+					// TODO: rethink the animation API
+					cmd_to_animate->boundingBox = animated_cmd.boundingBox;
 				} else {
 					animated_cmd = *cmd_to_animate;
 				}

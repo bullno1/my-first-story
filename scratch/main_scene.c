@@ -216,6 +216,7 @@ update(void) {
 						CLAY_TRANSFORM({ .animator = &bbox_animator })
 					) {
 						CLAY(
+							CLAY_ID_LOCAL("sprite"),
 							CLAY_LAYOUT({
 								.layoutDirection = CLAY_TOP_TO_BOTTOM,
 								.childAlignment.x = CLAY_ALIGN_X_CENTER,
