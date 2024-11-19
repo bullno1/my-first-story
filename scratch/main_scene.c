@@ -1,6 +1,7 @@
 #include <bgame/reloadable.h>
 #include <bgame/allocator.h>
 #include <bgame/allocator/tracked.h>
+#include <bgame/allocator/frame.h>
 #include <bgame/scene.h>
 #include <bgame/ui.h>
 #include <bgame/ui/animation.h>
@@ -9,6 +10,8 @@
 #include <cute_app.h>
 #include <cute_draw.h>
 #include <cute_sprite.h>
+#include <cute_input.h>
+#include <cute_math.h>
 #include <bhash.h>
 
 BGAME_DECLARE_TRACKED_ALLOCATOR(main_scene_alloc)
@@ -19,8 +22,28 @@ BGAME_VAR(CF_Sprite, sprite) = { 0 };
 BGAME_VAR(sprite_table_t, sprite_instances) = { 0 };
 
 BGAME_VAR(bgame_asset_bundle_t*, main_scene_assets) = NULL;
-
+BGAME_VAR(bool, sort_animations) = false;
 static bgame_9patch_t* window_border = NULL;
+
+static void
+animate_bbox(Clay_RenderCommand* from, const Clay_RenderCommand* to) {
+	float factor = 0.2f;
+	from->boundingBox.x = cf_lerp(from->boundingBox.x, to->boundingBox.x, factor);
+	from->boundingBox.y = cf_lerp(from->boundingBox.y, to->boundingBox.y, factor);
+	from->boundingBox.width = cf_lerp(from->boundingBox.width, to->boundingBox.width, factor);
+	from->boundingBox.height = cf_lerp(from->boundingBox.height, to->boundingBox.height, factor);
+}
+
+bgame_ui_animator_t bbox_animator = {
+	.transition = animate_bbox,
+};
+
+static int
+compare_anim_names(const void* lhs, const void* rhs) {
+	const CF_Sprite* lhs_sprite = *(const CF_Sprite**)lhs;
+	const CF_Sprite* rhs_sprite = *(const CF_Sprite**)rhs;
+	return strcmp(lhs_sprite->animation->name, rhs_sprite->animation->name);
+}
 
 static void
 init(int argc, const char** argv) {
@@ -65,6 +88,10 @@ update(void) {
 
 	cf_app_update(fixed_update);
 	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
+
+	if (cf_key_just_pressed(CF_KEY_SPACE)) {
+		sort_animations = !sort_animations;
+	}
 
 	cf_push_font("Calibri");
 	bgame_ui_begin();
@@ -130,7 +157,7 @@ update(void) {
 			})
 		) {
 			CLAY_TEXT(
-				CLAY_STRING("<shake>Content</shake>"),
+				sort_animations ? CLAY_STRING("Animations by name") : CLAY_STRING("Animations by index"),
 				CLAY_TEXT_CONFIG({ .fontSize = 24, .textColor = text_color })
 			);
 
@@ -143,7 +170,7 @@ update(void) {
 						.height = CLAY_SIZING_GROW({ 0 })
 					},
 					.childAlignment.x = CLAY_ALIGN_X_LEFT,
-					.childGap = 10,
+					.childGap = 0,
 				})
 			) {
 				// Create a separate instance for each animation
@@ -160,58 +187,73 @@ update(void) {
 					}
 				}
 
-				for (int i = 0; i < bhash_len(&sprite_instances); ++i) {
+				// Load animation to a temporary array for sorting
+				bhash_index_t num_animations = bhash_len(&sprite_instances);
+				CF_Sprite** animations = bgame_alloc_for_frame(
+					sizeof(CF_Sprite*) * num_animations,
+					_Alignof(CF_Sprite*)
+				);
+				for (int i = 0; i < num_animations; ++i) {
 					CF_Sprite* instance = &sprite_instances.values[i];
 					cf_sprite_update(instance);
+					animations[i] = instance;
+				}
+				if (sort_animations) {
+					qsort(animations, num_animations, sizeof(CF_Sprite*), compare_anim_names);
+				}
+
+				for (int i = 0; i < num_animations; ++i) {
+					CF_Sprite* instance = animations[i];
 					Clay_String anim_name = {
 						.length = strlen(instance->animation->name),
 						.chars = instance->animation->name,
 					};
 
-					CLAY(
-						Clay__AttachId(
-							Clay__HashString(anim_name, 0, Clay__GetParentElementId())
-						),
-						CLAY_LAYOUT({
-							.layoutDirection = CLAY_TOP_TO_BOTTOM,
-							.childAlignment.x = CLAY_ALIGN_X_CENTER,
-							.sizing = {
-								.width = CLAY_SIZING_FIT({ 0 }),
-								.height = CLAY_SIZING_FIT({ 0 }),
-							},
-							.padding = { 5, 5 },
-							}),
-						CLAY_BORDER_OUTSIDE({
-							.color = bgame_ui_color(cf_color_white()),
-							.width = 1,
-						})
-					) {
-
+					BGAME_UI_ANIMATION(&bbox_animator) {
 						CLAY(
-							CLAY_ID_LOCAL("sprite"),
+							Clay__AttachId(
+								Clay__HashString(anim_name, 0, Clay__GetParentElementId())
+							),
 							CLAY_LAYOUT({
+								.layoutDirection = CLAY_TOP_TO_BOTTOM,
+								.childAlignment.x = CLAY_ALIGN_X_CENTER,
 								.sizing = {
-									.width = CLAY_SIZING_FIXED(instance->w),
-									.height = CLAY_SIZING_FIXED(instance->h),
-								}
-							}),
-							CLAY_IMAGE({
-								.imageData = instance,
-								.sourceDimensions = {
-									.width = instance->w,
-									.height = instance->h,
+									.width = CLAY_SIZING_FIT({ 0 }),
+									.height = CLAY_SIZING_FIT({ 0 }),
 								},
+								.padding = { 5, 5 },
+								}),
+							CLAY_BORDER_OUTSIDE({
+								.color = bgame_ui_color(cf_color_white()),
+								.width = 1,
 							})
 						) {
-						}
+							CLAY(
+								CLAY_ID_LOCAL("sprite"),
+								CLAY_LAYOUT({
+									.sizing = {
+										.width = CLAY_SIZING_FIXED(instance->w),
+										.height = CLAY_SIZING_FIXED(instance->h),
+									}
+								}),
+								CLAY_IMAGE({
+									.imageData = instance,
+									.sourceDimensions = {
+										.width = instance->w,
+										.height = instance->h,
+									},
+								})
+							) {
+							}
 
-						CLAY_TEXT(
-							anim_name,
-							CLAY_TEXT_CONFIG({
-								.fontSize = 15,
-								.textColor = text_color
-							})
-						);
+							CLAY_TEXT(
+								anim_name,
+								CLAY_TEXT_CONFIG({
+									.fontSize = 15,
+									.textColor = text_color
+								})
+							);
+						}
 					}
 				}
 			}

@@ -24,9 +24,9 @@ struct cute_9_patch_s;
 #include <cute_sprite.h>
 #include <cute_color.h>
 
-#define BGAME_UI_DEFER_VAR BGAME_UI_DEFER_VAR(bgame_ui_defer, __LINE__)
-#define BGAME_UI_DEFER_VAR2(A, B) BGAME_UI_DEFER_VAR3(A, B)
-#define BGAME_UI_DEFER_VAR3(A, B) A##B
+#define BGAME_UI__DEFER_VAR BGAME_UI__DEFER_VAR2(bgame_ui_defer, __LINE__)
+#define BGAME_UI__DEFER_VAR2(A, B) BGAME_UI__DEFER_VAR3(A, B)
+#define BGAME_UI__DEFER_VAR3(A, B) A##B
 
 void
 bgame_ui_begin(void);

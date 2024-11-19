@@ -8,16 +8,16 @@ typedef struct bgame_ui_animator_s {
 } bgame_ui_animator_t;
 
 void
-bgame_ui_begin_animation(bgame_ui_animator_t animator);
+bgame_ui_begin_animation(bgame_ui_animator_t* animator);
 
 void
 bgame_ui_end_animation(void);
 
 #define BGAME_UI_ANIMATION(...) \
 	for ( \
-		int BGAME_UI_DEFER_VAR = (bgame_ui_begin_animation(__VA_ARGS__), 0); \
-		BGAME_UI_DEFER_VAR < 1; \
-		++BGAME_UI_DEFER_VAR, bgame_ui_end_animation() \
+		int BGAME__UI_DEFER_VAR = (bgame_ui_begin_animation(__VA_ARGS__), 0); \
+		BGAME__UI_DEFER_VAR < 1; \
+		++BGAME__UI_DEFER_VAR, bgame_ui_end_animation() \
 	)
 
 #endif
