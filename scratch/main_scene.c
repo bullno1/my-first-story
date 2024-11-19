@@ -213,50 +213,46 @@ update(void) {
 						Clay__AttachId(
 							Clay__HashString(anim_name, 0, Clay__GetParentElementId())
 						),
+						CLAY_LAYOUT({
+							.layoutDirection = CLAY_TOP_TO_BOTTOM,
+							.childAlignment.x = CLAY_ALIGN_X_CENTER,
+							.sizing = {
+								.width = CLAY_SIZING_FIT({ 0 }),
+								.height = CLAY_SIZING_FIT({ 0 }),
+							},
+							.padding = { 5, 5 },
+						}),
+						CLAY_BORDER_OUTSIDE({
+							.color = bgame_ui_color(cf_color_white()),
+							.width = 1,
+						}),
 						CLAY_TRANSFORM({ .animator = &bbox_animator })
 					) {
 						CLAY(
 							CLAY_ID_LOCAL("sprite"),
 							CLAY_LAYOUT({
-								.layoutDirection = CLAY_TOP_TO_BOTTOM,
-								.childAlignment.x = CLAY_ALIGN_X_CENTER,
 								.sizing = {
-									.width = CLAY_SIZING_FIT({ 0 }),
-									.height = CLAY_SIZING_FIT({ 0 }),
-								},
-								.padding = { 5, 5 },
+									.width = CLAY_SIZING_FIXED(instance->w),
+									.height = CLAY_SIZING_FIXED(instance->h),
+								}
 							}),
-							CLAY_BORDER_OUTSIDE({
-								.color = bgame_ui_color(cf_color_white()),
-								.width = 1,
+							CLAY_IMAGE({
+								.imageData = instance,
+								.sourceDimensions = {
+									.width = instance->w,
+									.height = instance->h,
+								},
 							})
 						) {
-							CLAY(
-								CLAY_ID_LOCAL("sprite"),
-								CLAY_LAYOUT({
-									.sizing = {
-										.width = CLAY_SIZING_FIXED(instance->w),
-										.height = CLAY_SIZING_FIXED(instance->h),
-									}
-								}),
-								CLAY_IMAGE({
-									.imageData = instance,
-									.sourceDimensions = {
-										.width = instance->w,
-										.height = instance->h,
-									},
-								})
-							) {
-							}
-
-							CLAY_TEXT(
-								anim_name,
-								CLAY_TEXT_CONFIG({
-									.fontSize = 15,
-									.textColor = text_color
-								})
-							);
 						}
+
+						CLAY_TEXT(
+							anim_name,
+							CLAY_TEXT_CONFIG({
+								.fontSize = 15,
+								.textColor = text_color
+							})
+						);
 					}
 				}
 			}
