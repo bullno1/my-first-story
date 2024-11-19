@@ -1,14 +1,12 @@
 #include <bgame/reloadable.h>
 #include <bgame/allocator.h>
 
-#define PICO_LOG_IMPLEMENTATION
-#include <pico_log.h>
-
 #define BLIB_REALLOC bgame_realloc
-#define BHASH_IMPLEMENTATION
+#define BLIB_IMPLEMENTATION
 #include <bhash.h>
+#include <barray.h>
+#include <barena.h>
 
 #if BGAME_RELOADABLE
-#define BRESMON_IMPLEMENTATION
 #include <bresmon.h>
 #endif

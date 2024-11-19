@@ -1,11 +1,17 @@
 set(SOURCES
+	"src/libs.c"
+	"src/log.c"
+	"src/allocator.c"
+	"src/allocator/tracked.c"
+	"src/allocator/frame.c"
+	"src/allocator/cute_framework.c"
 	"src/entrypoint.c"
 	"src/scene.c"
-	"src/libs.c"
-	"src/allocator.c"
 	"src/ui.c"
+	"src/ui/animation.c"
 	"src/asset.c"
 	"src/asset/9patch.c"
+	"src/internal.c"
 )
 
 add_library(bgame STATIC "${SOURCES}")

@@ -1,14 +1,23 @@
 #define CLAY_IMPLEMENTATION
 #include <bgame/reloadable.h>
 #include <bgame/allocator.h>
+#include <bgame/allocator/tracked.h>
+#include <bgame/log.h>
 #include <bgame/ui.h>
+#include <bgame/ui/animation.h>
 #include <bgame/asset/9patch.h>
+#include <bhash.h>
+#include <barray.h>
 #include <cute_app.h>
 #include <cute_input.h>
 #include <cute_draw.h>
 
+typedef BHASH_TABLE(uint32_t, Clay_RenderCommand) bgame_ui_animation_buffer_t;
 typedef struct {
 	Clay_Arena clay_arena;
+	bgame_ui_animation_buffer_t animation_buffer_a, animation_buffer_b;
+	barray(uint32_t) animation_element_indices;
+	bgame_ui_animation_buffer_t *current_animation_buffer, *previous_animation_buffer;
 } bgame_ui_ctx_t;
 
 static bool bgame_ui_need_init = true;
@@ -55,6 +64,15 @@ bgame_ui_init(void) {
 	});
 	Clay_SetMeasureTextFunction(bgame_ui_measure_text);
 
+	bhash_config_t config = bhash_config_default();
+	config.memctx = bgame_ui;
+	bhash_reinit(&bgame_ui_ctx.animation_buffer_a, config);
+	bhash_reinit(&bgame_ui_ctx.animation_buffer_b, config);
+	bhash_clear(&bgame_ui_ctx.animation_buffer_a);
+	bhash_clear(&bgame_ui_ctx.animation_buffer_b);
+	bgame_ui_ctx.current_animation_buffer = &bgame_ui_ctx.animation_buffer_a;
+	bgame_ui_ctx.previous_animation_buffer = &bgame_ui_ctx.animation_buffer_b;
+
 	bgame_ui_need_init = false;
 }
 
@@ -100,6 +118,10 @@ bgame_ui_begin(void) {
 		CF_DELTA_TIME
 	);
 
+	bgame_ui_animation_buffer_t* tmp = bgame_ui_ctx.current_animation_buffer;
+	bgame_ui_ctx.current_animation_buffer = bgame_ui_ctx.previous_animation_buffer;
+	bgame_ui_ctx.previous_animation_buffer = tmp;
+	bhash_clear(bgame_ui_ctx.current_animation_buffer);
 	Clay_BeginLayout();
 }
 
@@ -107,12 +129,51 @@ void
 bgame_ui_end(void) {
 	Clay_RenderCommandArray cmds = Clay_EndLayout();
 
+	// Animate
+	barray_clear(bgame_ui_ctx.animation_element_indices);
+	for (uint32_t i = 0; i < cmds.length; ++i) {
+		Clay_RenderCommand cmd = cmds.internalArray[i];
+		if (cmd.commandType != CLAY_RENDER_COMMAND_TYPE_CUSTOM) {
+			continue;
+		}
+
+		if (cmd.config.customElementConfig->type == BGAME_UI_CUSTOM_ANIMATION_BEGIN) {
+			barray_push(bgame_ui_ctx.animation_element_indices, i, bgame_ui);
+		} else if (cmd.config.customElementConfig->type == BGAME_UI_CUSTOM_ANIMATION_END) {
+			if (barray_len(bgame_ui_ctx.animation_element_indices) == 0) {
+				log_fatal("Unbalanced animation nodes");
+				break;
+			}
+
+			// Animate all commands between begin and end
+			uint32_t anim_begin_index = barray_pop(bgame_ui_ctx.animation_element_indices);
+			Clay_RenderCommand anim_begin_cmd = cmds.internalArray[anim_begin_index];
+			bgame_ui_animator_t* animator = anim_begin_cmd.config.customElementConfig->data.animation_begin.animator;
+			for (uint32_t anim_cmd_index = anim_begin_index + 1; anim_cmd_index < i; ++anim_cmd_index) {
+				Clay_RenderCommand* cmd_to_animate = &cmds.internalArray[anim_cmd_index];
+				bhash_index_t index = bhash_find(bgame_ui_ctx.previous_animation_buffer, cmd_to_animate->id);
+				Clay_RenderCommand animated_cmd;
+				if (bhash_is_valid(index)) {
+					animated_cmd = bgame_ui_ctx.previous_animation_buffer->values[index];
+					if (animator->transition) {
+						animator->transition(&animated_cmd, cmd_to_animate);
+					}
+					*cmd_to_animate = animated_cmd;
+				} else {
+					animated_cmd = *cmd_to_animate;
+				}
+				bhash_put(bgame_ui_ctx.current_animation_buffer, cmd_to_animate->id, animated_cmd);
+			}
+		}
+	}
+
 	int w, h;
 	cf_app_get_size(&w, &h);
 
 	float half_width = w * 0.5f;
 	float half_height = h * 0.5f;
 
+	// Render
 	cf_draw_push();
 	cf_draw_translate(-half_width, half_height);
 	for (uint32_t i = 0; i < cmds.length; ++i) {

@@ -59,7 +59,7 @@ bgame_main(int argc, const char* argv[]) {
 	loader_interface.app.init(argc, argv);
 
 	while (cf_app_is_running()) {
-		loader_interface.app.update();
+		loader_interface.update(&loader_interface);
 
 		if (bresmon_should_reload(monitor, false)) {
 			bresmon_reload(monitor);

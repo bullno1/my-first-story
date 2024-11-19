@@ -1,7 +1,7 @@
 #include <bgame/scene.h>
 #include <bgame/app.h>
 #include <bgame/reloadable.h>
-#include <pico_log.h>
+#include <bgame/log.h>
 #include <string.h>
 #include <stdlib.h>
 

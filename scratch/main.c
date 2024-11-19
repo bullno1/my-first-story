@@ -1,5 +1,6 @@
 #include <bgame/entrypoint.h>
 #include <bgame/allocator.h>
+#include <bgame/allocator/tracked.h>
 #include <bgame/scene.h>
 #include <bgame/log.h>
 #include <stdbool.h>

@@ -1,6 +1,8 @@
+#include "internal.h"
 #include <bgame/reloadable.h>
 #include <bgame/asset.h>
 #include <bgame/allocator.h>
+#include <bgame/allocator/tracked.h>
 #include <bgame/log.h>
 #include <bhash.h>
 
@@ -22,6 +24,7 @@ typedef struct {
 
 typedef struct {
 	int ref_count;
+	bool dynamic;
 	bgame_asset_key_t key;
 
 	int source_version;
@@ -31,7 +34,7 @@ typedef struct {
 	bresmon_watch_t* watch;
 #endif
 
-	_Alignas(max_align_t) char data[];
+	_Alignas(BGAME_MAX_ALIGN_TYPE) char data[];
 } bgame_asset_t;
 
 typedef BHASH_TABLE(bgame_asset_key_t, bgame_asset_t*) bgame_asset_cache_t;
@@ -81,7 +84,7 @@ bgame_str_eq(const void* lhs, const void* rhs, size_t size) {
 static bhash_hash_t
 bgame_asset_key_hash(const void* key, size_t size) {
 	const bgame_asset_key_t* asset_key = key;
-	uint64_t type_hash = bhash__chibihash64(asset_key->type, sizeof(asset_key->type), 0);
+	uint64_t type_hash = bhash__chibihash64(&asset_key->type, sizeof(asset_key->type), 0);
 	return bhash__chibihash64(asset_key->path.chars, asset_key->path.len, type_hash);
 }
 
@@ -165,6 +168,16 @@ bgame_asset_init(void) {
 #endif
 }
 
+#if BGAME_RELOADABLE
+
+static void
+bgame_asset_on_file_changed(const char* file, void* userdata) {
+	bgame_asset_t* asset = userdata;
+	++asset->source_version;
+}
+
+#endif
+
 void
 bgame_asset_begin_load(bgame_asset_bundle_t** bundle_ptr) {
 	bgame_asset_init();
@@ -186,10 +199,27 @@ bgame_asset_begin_load(bgame_asset_bundle_t** bundle_ptr) {
 	config.eq = bgame_asset_key_eq;
 	bhash_reinit(&bundle->assets, config);
 
+	if (bundle->code_version != bgame_asset_code_version) {
+		bhash_index_t num_assets = bhash_len(&bundle->assets);
+		for (bhash_index_t i = 0; i < num_assets; ++i) {
+			bgame_asset_t* asset = bundle->assets.values[i];
+			bresmon_set_watch_callback(asset->watch, bgame_asset_on_file_changed, asset);
+		}
+
+		bundle->code_version = bgame_asset_code_version;
+	}
+
 	bhash_index_t num_assets = bhash_len(&bundle->assets);
 	for (bhash_index_t i = 0; i < num_assets; ++i) {
 		bgame_asset_t* asset = bundle->assets.values[i];
-		asset->ref_count = 0;
+
+		// If an asset is loaded within bgame_asset_begin_load and
+		// bgame_asset_end_load, it is eligible for purging when not mentioned
+		// again
+		// TODO: this may not be correct without tracking asset dependency
+		if (!asset->dynamic) {
+			asset->ref_count = 0;
+		}
 	}
 
 	bundle->loading = true;
@@ -218,16 +248,6 @@ bgame_asset_destroy(bgame_asset_t* asset) {
 	bgame_asset_strfree(asset->key.path);
 	bgame_free(asset, bgame_asset);
 }
-
-#if BGAME_RELOADABLE
-
-static void
-bgame_asset_on_file_changed(const char* file, void* userdata) {
-	bgame_asset_t* asset = userdata;
-	++asset->source_version;
-}
-
-#endif
 
 bool
 bgame_asset_source_changed(bgame_asset_bundle_t* bundle, void* asset_data) {
@@ -258,9 +278,11 @@ bgame_asset_load_impl(
 			.path = bgame_asset_strcpy(path),
 		};
 		asset->source_version = 1;
+		asset->dynamic = !bundle->loading;
 #if BGAME_RELOADABLE
 		asset->watch = bresmon_watch(bundle->monitor, path, bgame_asset_on_file_changed, asset);
 #endif
+		log_debug("Created new %s for %s: %p", type->name, path, (void*)asset);
 	} else {
 		asset = bundle->assets.values[asset_index];
 	}
@@ -268,13 +290,13 @@ bgame_asset_load_impl(
 	bgame_asset_load_result_t result = type->load(bundle, asset->data, path, args);
 	switch (result) {
 		case BGAME_ASSET_LOADED:
-			log_info("Loaded %s: %s (%p)", type->name, path, asset->data);
+			log_info("Loaded %s: %s (%p)", type->name, path, (void*)asset->data);
 			if (is_new_asset) {
 				bhash_put(&bundle->assets, asset->key, asset);
 			}
 			break;
 		case BGAME_ASSET_UNCHANGED:
-			log_info("Reused cache for %s: %s (%p)", type->name, path, asset->data);
+			log_info("Reused cache for %s: %s (%p)", type->name, path, (void*)asset->data);
 			if (is_new_asset) {
 				bhash_put(&bundle->assets, asset->key, asset);
 				log_warn("New asset is unchanged");
@@ -350,7 +372,7 @@ bgame_asset_end_load(bgame_asset_bundle_t* bundle) {
 				"Purging %s: %s (%p)",
 				asset_key.type->name,
 				bundle->assets.keys[i].path.chars,
-				asset->data
+				(void*)asset->data
 			);
 
 			asset->key.type->unload(bundle, asset->data);
@@ -378,16 +400,6 @@ bgame_asset_check_bundle(bgame_asset_bundle_t* bundle) {
 #if BGAME_RELOADABLE
 	bgame_asset_init();
 
-	if (bundle->code_version != bgame_asset_code_version) {
-		bhash_index_t num_assets = bhash_len(&bundle->assets);
-		for (bhash_index_t i = 0; i < num_assets; ++i) {
-			bgame_asset_t* asset = bundle->assets.values[i];
-			bresmon_set_watch_callback(asset->watch, bgame_asset_on_file_changed, asset);
-		}
-
-		bundle->code_version = bgame_asset_code_version;
-	}
-
 	if (bresmon_check(bundle->monitor, false) > 0) {
 		bgame_asset_begin_load(&bundle);
 
@@ -396,7 +408,9 @@ bgame_asset_check_bundle(bgame_asset_bundle_t* bundle) {
 		for (bhash_index_t i = 0; i < num_assets; ++i) {
 			bgame_asset_t* asset = bundle->assets.values[i];
 			bgame_asset_load_impl(bundle, asset->key.type, asset->key.path.chars, NULL);
-			asset->ref_count = 1;  // Prevent purging due to failure
+			if (asset->ref_count == 0) {
+				asset->ref_count = 1;  // Prevent purging due to failure
+			}
 		}
 
 		bgame_asset_end_load(bundle);

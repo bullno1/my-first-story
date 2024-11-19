@@ -1,7 +1,9 @@
 #include <bgame/reloadable.h>
 #include <bgame/allocator.h>
+#include <bgame/allocator/tracked.h>
 #include <bgame/scene.h>
 #include <bgame/ui.h>
+#include <bgame/ui/animation.h>
 #include <bgame/asset.h>
 #include <bgame/asset/9patch.h>
 #include <cute_app.h>
@@ -159,8 +161,17 @@ update(void) {
 				}
 
 				for (int i = 0; i < bhash_len(&sprite_instances); ++i) {
+					CF_Sprite* instance = &sprite_instances.values[i];
+					cf_sprite_update(instance);
+					Clay_String anim_name = {
+						.length = strlen(instance->animation->name),
+						.chars = instance->animation->name,
+					};
+
 					CLAY(
-						CLAY_IDI_LOCAL("Animation", i),
+						Clay__AttachId(
+							Clay__HashString(anim_name, 0, Clay__GetParentElementId())
+						),
 						CLAY_LAYOUT({
 							.layoutDirection = CLAY_TOP_TO_BOTTOM,
 							.childAlignment.x = CLAY_ALIGN_X_CENTER,
@@ -175,8 +186,6 @@ update(void) {
 							.width = 1,
 						})
 					) {
-						CF_Sprite* instance = &sprite_instances.values[i];
-						cf_sprite_update(instance);
 
 						CLAY(
 							CLAY_ID_LOCAL("sprite"),
@@ -197,10 +206,7 @@ update(void) {
 						}
 
 						CLAY_TEXT(
-							((Clay_String){
-								.length = strlen(instance->animation->name),
-								.chars = instance->animation->name,
-							}),
+							anim_name,
 							CLAY_TEXT_CONFIG({
 								.fontSize = 15,
 								.textColor = text_color

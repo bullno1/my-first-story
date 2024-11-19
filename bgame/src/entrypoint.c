@@ -1,26 +1,18 @@
+#include "internal.h"
 #include <bgame/reloadable.h>
-#include <pico_log.h>
+#include <bgame/log.h>
 #include "loader_interface.h"
 
-static void
-bgame_init_logger(void) {
-	log_appender_t id = log_add_stream(stderr, LOG_LEVEL_TRACE);
-	log_set_time_fmt(id, "%H:%M:%S");
-	log_display_colors(id, true);
-	log_display_timestamp(id, true);
-	log_display_file(id, true);
-}
-
 extern void
-bgame_init_allocators(void);
-
-static void
-bgame_init(void) {
-	bgame_init_logger();
-	bgame_init_allocators();
-}
+bgame_frame_allocator_next_frame(void);
 
 #if BGAME_RELOADABLE
+
+static void
+bgame_update(bgame_loader_interface_t* interface) {
+	bgame_frame_allocator_next_frame();
+	interface->app.update();
+}
 
 void
 bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
@@ -30,6 +22,7 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 		case REMODULE_OP_LOAD:
 			bgame_init();
 			loader_interface->app = app;
+			loader_interface->update = bgame_update;
 			log_info("App loaded");
 			break;
 		case REMODULE_OP_UNLOAD:
@@ -46,6 +39,7 @@ bgame_remodule(bgame_app_t app, remodule_op_t op, void* userdata) {
 
 			log_info("App reloaded");
 			loader_interface->app = app;
+			loader_interface->update = bgame_update;
 			if (app.after_reload != NULL) {
 				app.after_reload();
 			}
@@ -66,6 +60,7 @@ bgame_static(bgame_app_t app, int argc, const char** argv) {
 
 	app.init(argc, argv);
 	while (cf_app_is_running()) {
+		bgame_frame_allocator_next_frame();
 		app.update();
 	}
 	app.cleanup();
