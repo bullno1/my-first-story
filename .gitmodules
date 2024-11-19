@@ -3,13 +3,13 @@
 	url = https://github.com/bullno1/libs.git
 [submodule "deps/clay"]
 	path = deps/clay
-	url = https://github.com/nicbarker/clay.git
+	url = https://github.com/bullno1/clay.git
 [submodule "deps/remodule"]
 	path = deps/remodule
 	url = https://github.com/bullno1/remodule.git
 [submodule "deps/cute_framework"]
 	path = deps/cute_framework
-	url = https://github.com/RandyGaul/cute_framework.git
+	url = https://github.com/bullno1/cute_framework.git
 [submodule "deps/pico_headers"]
 	path = deps/pico_headers
 	url = https://github.com/empyreanx/pico_headers.git
