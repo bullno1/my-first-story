@@ -170,7 +170,7 @@ update(void) {
 						.height = CLAY_SIZING_GROW({ 0 })
 					},
 					.childAlignment.x = CLAY_ALIGN_X_LEFT,
-					.childGap = 0,
+					.childGap = 16,
 				})
 			) {
 				// Create a separate instance for each animation
@@ -209,11 +209,13 @@ update(void) {
 						.chars = instance->animation->name,
 					};
 
-					BGAME_UI_ANIMATION(&bbox_animator) {
+					CLAY(
+						Clay__AttachId(
+							Clay__HashString(anim_name, 0, Clay__GetParentElementId())
+						),
+						CLAY_TRANSFORM({ .animator = &bbox_animator })
+					) {
 						CLAY(
-							Clay__AttachId(
-								Clay__HashString(anim_name, 0, Clay__GetParentElementId())
-							),
 							CLAY_LAYOUT({
 								.layoutDirection = CLAY_TOP_TO_BOTTOM,
 								.childAlignment.x = CLAY_ALIGN_X_CENTER,
@@ -222,7 +224,7 @@ update(void) {
 									.height = CLAY_SIZING_FIT({ 0 }),
 								},
 								.padding = { 5, 5 },
-								}),
+							}),
 							CLAY_BORDER_OUTSIDE({
 								.color = bgame_ui_color(cf_color_white()),
 								.width = 1,

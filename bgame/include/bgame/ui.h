@@ -1,25 +1,12 @@
 #ifndef BGAME_UI_H
 #define BGAME_UI_H
 
-typedef enum {
-	BGAME_UI_CUSTOM_ANIMATION_BEGIN,
-	BGAME_UI_CUSTOM_ANIMATION_END,
-} bgame_ui_custom_type_t;
-
 struct bgame_ui_animator_s;
-
-typedef union {
-	struct {
-		struct bgame_ui_animator_s* animator;
-	} animation_begin;
-} bgame_ui_custom_data_t;
 
 struct cute_9_patch_s;
 #define CLAY_EXTEND_CONFIG_TEXT const char* fontName;
 #define CLAY_EXTEND_CONFIG_RECTANGLE struct bgame_9patch_s* nine_patch;
-#define CLAY_EXTEND_CONFIG_CUSTOM \
-	bgame_ui_custom_type_t type; \
-	bgame_ui_custom_data_t data;
+#define CLAY_EXTEND_CONFIG_TRANSFORM struct bgame_ui_animator_s* animator;
 #include <clay.h>
 #include <cute_sprite.h>
 #include <cute_color.h>

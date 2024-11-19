@@ -8,7 +8,6 @@ set(SOURCES
 	"src/entrypoint.c"
 	"src/scene.c"
 	"src/ui.c"
-	"src/ui/animation.c"
 	"src/asset.c"
 	"src/asset/9patch.c"
 	"src/internal.c"

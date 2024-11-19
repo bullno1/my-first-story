@@ -133,13 +133,10 @@ bgame_ui_end(void) {
 	barray_clear(bgame_ui_ctx.animation_element_indices);
 	for (uint32_t i = 0; i < cmds.length; ++i) {
 		Clay_RenderCommand cmd = cmds.internalArray[i];
-		if (cmd.commandType != CLAY_RENDER_COMMAND_TYPE_CUSTOM) {
-			continue;
-		}
 
-		if (cmd.config.customElementConfig->type == BGAME_UI_CUSTOM_ANIMATION_BEGIN) {
+		if (cmd.commandType == CLAY_RENDER_COMMAND_TYPE_TRANSFORM_START) {
 			barray_push(bgame_ui_ctx.animation_element_indices, i, bgame_ui);
-		} else if (cmd.config.customElementConfig->type == BGAME_UI_CUSTOM_ANIMATION_END) {
+		} else if (cmd.commandType == CLAY_RENDER_COMMAND_TYPE_TRANSFORM_END) {
 			if (barray_len(bgame_ui_ctx.animation_element_indices) == 0) {
 				log_fatal("Unbalanced animation nodes");
 				break;
@@ -148,7 +145,7 @@ bgame_ui_end(void) {
 			// Animate all commands between begin and end
 			uint32_t anim_begin_index = barray_pop(bgame_ui_ctx.animation_element_indices);
 			Clay_RenderCommand anim_begin_cmd = cmds.internalArray[anim_begin_index];
-			bgame_ui_animator_t* animator = anim_begin_cmd.config.customElementConfig->data.animation_begin.animator;
+			bgame_ui_animator_t* animator = anim_begin_cmd.config.transformElementConfig->animator;
 			for (uint32_t anim_cmd_index = anim_begin_index + 1; anim_cmd_index < i; ++anim_cmd_index) {
 				Clay_RenderCommand* cmd_to_animate = &cmds.internalArray[anim_cmd_index];
 				bhash_index_t index = bhash_find(bgame_ui_ctx.previous_animation_buffer, cmd_to_animate->id);
@@ -238,6 +235,8 @@ bgame_ui_end(void) {
 			case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END:
 				cf_draw_pop_scissor();
 				break;
+			case CLAY_RENDER_COMMAND_TYPE_TRANSFORM_START:
+			case CLAY_RENDER_COMMAND_TYPE_TRANSFORM_END:
 			case CLAY_RENDER_COMMAND_TYPE_CUSTOM:
 				break;
 		}
