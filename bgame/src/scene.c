@@ -37,20 +37,20 @@ bgame_set_scene(const char* name) {
 	if (name != NULL) {
 		name_len = strlen(name);
 		if (name_len > sizeof(g_bgame_current_scene_name)) {
-			log_error("Scene name is too long: %s", name);
+			log_error("Scene name is too long: `%s`", name);
 			return;
 		}
 
 		target_scene = bgame_find_scene(name, name_len);
 		if (target_scene == NULL) {
-			log_error("Could not find scene: %s", name);
+			log_error("Could not find scene: `%s`", name);
 			if (g_bgame_current_scene == NULL) { exit(1); }
 			return;
 		}
 	}
 
 	if (g_bgame_current_scene != NULL && g_bgame_current_scene->cleanup != NULL) {
-		log_info("Cleaning up scene %s", g_bgame_current_scene_name);
+		log_info("Cleaning up scene `%s`", g_bgame_current_scene_name);
 		g_bgame_current_scene->cleanup();
 	}
 
@@ -61,7 +61,7 @@ bgame_set_scene(const char* name) {
 	g_bgame_current_scene_name_len = name_len;
 
 	if (target_scene && target_scene->init != NULL) {
-		log_info("Initializing scene %s", g_bgame_current_scene_name);
+		log_info("Initializing scene `%s`", g_bgame_current_scene_name);
 		target_scene->init(0, NULL);
 	}
 }
@@ -81,7 +81,7 @@ bgame_scene_update(void) {
 void
 bgame_scene_before_reload(void) {
 	if (g_bgame_current_scene != NULL && g_bgame_current_scene->before_reload != NULL) {
-		log_info("Saving scene %s", g_bgame_current_scene_name);
+		log_info("Saving scene `%s`", g_bgame_current_scene_name);
 		g_bgame_current_scene->before_reload();
 	}
 }
@@ -94,19 +94,19 @@ bgame_scene_after_reload(void) {
 
 	if (g_bgame_current_scene == NULL) {
 		log_error(
-			"Could not restore scene: %.*s",
+			"Could not restore scene: `%.*s`",
 			(int)g_bgame_current_scene_name_len, g_bgame_current_scene_name
 		);
 		return;
 	}
 
 	if (g_bgame_current_scene->after_reload != NULL) {
-		log_info("Reloading scene %s", g_bgame_current_scene_name);
+		log_info("Reloading scene `%s`", g_bgame_current_scene_name);
 		g_bgame_current_scene->after_reload();
 	}
 
 	if (g_bgame_current_scene->init != NULL) {
-		log_info("Reinitializing scene %s", g_bgame_current_scene_name);
+		log_info("Reinitializing scene `%s`", g_bgame_current_scene_name);
 		g_bgame_current_scene->init(0, NULL);
 	}
 }

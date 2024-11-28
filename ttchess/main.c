@@ -5,16 +5,20 @@
 #include <cute_app.h>
 #include <cute_file_system.h>
 #include <stdbool.h>
+#include "scenes/game.h"
 
 BGAME_VAR(bool, app_created) = false;
 
-static const char* WINDOW_TITLE = "bgame scratch";
+static const char* WINDOW_TITLE = "ttchess";
 
 static void
 init(int argc, const char** argv) {
 	// Cute Framework
 	if (!app_created) {
-		int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
+		int options =
+			  CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT
+			| CF_APP_OPTIONS_FILE_SYSTEM_DONT_DEFAULT_MOUNT_BIT
+			;
 		cf_make_app(WINDOW_TITLE, 0, 0, 0, 1280, 720, options, argv[0]);
 
 		// Mount assets dir
@@ -27,6 +31,8 @@ init(int argc, const char** argv) {
 		}
 		sfree(dir);
 
+		cf_fs_set_write_directory(cf_fs_get_user_directory("bullno1", "ttchess"));
+
 		app_created = true;
 	}
 
@@ -35,7 +41,9 @@ init(int argc, const char** argv) {
 	cf_app_set_title(WINDOW_TITLE);
 
 	if (bgame_current_scene() == NULL) {
-		bgame_set_scene("scene_game");
+		goto_new_game_scene((ttchess_config_t){
+			.with_statues = true,
+		});
 	}
 }
 

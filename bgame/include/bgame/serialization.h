@@ -27,7 +27,7 @@ bserial_vfs_end_read(bserial_vfs_in_t* in) {
 bserial_out_t*
 bserial_vfs_begin_write(bserial_vfs_out_t* out, const char* name);
 
-void
+static inline void
 bserial_vfs_end_write(bserial_vfs_out_t* out) {
 	cf_fs_close(out->file);
 }
