@@ -81,6 +81,7 @@ bgame_scene_update(void) {
 void
 bgame_scene_before_reload(void) {
 	if (g_bgame_current_scene != NULL && g_bgame_current_scene->before_reload != NULL) {
+		log_info("Saving scene %s", g_bgame_current_scene_name);
 		g_bgame_current_scene->before_reload();
 	}
 }

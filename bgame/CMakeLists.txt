@@ -7,6 +7,7 @@ set(SOURCES
 	"src/allocator/cute_framework.c"
 	"src/entrypoint.c"
 	"src/scene.c"
+	"src/serialization.c"
 	"src/ui.c"
 	"src/asset.c"
 	"src/asset/9patch.c"

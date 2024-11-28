@@ -6,6 +6,7 @@
 #include <bhash.h>
 #include <barray.h>
 #include <barena.h>
+#include <bgame/serialization.h>
 
 #if BGAME_RELOADABLE
 #include <bresmon.h>
