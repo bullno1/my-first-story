@@ -99,3 +99,4 @@ set(CMAKE_INSTALL_RPATH "\${ORIGIN}")
 
 add_subdirectory(bgame)
 add_subdirectory(scratch)
+add_subdirectory(ttchess)

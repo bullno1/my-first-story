@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-inotifywait -r -e CLOSE_WRITE -m bgame scratch | \
+inotifywait -r -e CLOSE_WRITE -m bgame scratch ttchess | \
     while read path action file
 	do
 		echo "Rebuilding"
