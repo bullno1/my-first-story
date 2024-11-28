@@ -60,7 +60,7 @@ init(int argc, const char** argv) {
 	bgame_asset_begin_load(&main_scene_assets);
 	window_border = bgame_load_9patch(
 		main_scene_assets,
-		"assets/frame.png",
+		"/assets/frame.png",
 		(bgame_9patch_config_t) {
 			.left = 25,
 			.right = 25,

@@ -1,7 +1,6 @@
 #ifndef BGAME_ASSET_9PATCH_H
 #define BGAME_ASSET_9PATCH_H
 
-#include <bgame/asset.h>
 #include <cute_math.h>
 
 struct bgame_asset_bundle_s;
