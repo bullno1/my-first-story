@@ -49,6 +49,8 @@ static void
 cleanup(void) {
 	bgame_free(g_saved_state.mem, SCENE_ALLOCATOR);
 	g_saved_state.mem = NULL;
+
+	bgame_asset_destroy_bundle(assets_game);
 }
 
 static void

@@ -53,7 +53,10 @@ bgame_sprite_load(
 			*sprite = cf_make_sprite(path);
 			return BGAME_ASSET_LOADED;
 		} else {
+			// Preserve transformation
+			CF_V2 scale = sprite->scale;
 			*sprite = cf_sprite_reload(sprite);
+			sprite->scale = scale;
 			return BGAME_ASSET_LOADED;
 		}
 	} else {
