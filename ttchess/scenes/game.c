@@ -16,9 +16,10 @@ BGAME_DECLARE_TRACKED_ALLOCATOR(g_alloc_scene_game)
 #define SCENE_ALLOCATOR g_alloc_scene_game
 
 static const float CELL_SIZE = 75.f;
-static const float BOARD_GAP = 50.f;
+static const float BOARD_GAP = 80.f;
+static const float BOARD_Y_SCALE = 0.85f;
 static const CF_Color CELL_WHITE = { 1.f, 1.f, 1.f, 1.f };
-static const CF_Color CELL_BLACK = { 0.2f, 0.2f, 0.2f, 1.f };
+static const CF_Color CELL_BLACK = { 0.3f, 0.3f, 0.3f, 1.f };
 
 static ttchess_state_t g_state;
 
@@ -81,7 +82,6 @@ after_reload(void) {
 
 static void
 draw_board(const ttchess_state_t* state, ttchess_era_t era) {
-	const float tilt_factor = 0.85f;
 	const ttchess_board_t* board = &state->boards[era];
 	for (int x = 0; x < TTCHESS_BOARD_WIDTH; ++x) {
 		for (int y = 0; y < TTCHESS_BOARD_HEIGHT; ++y) {
@@ -93,11 +93,11 @@ draw_board(const ttchess_state_t* state, ttchess_era_t era) {
 			);
 			CF_V2 top_left = {
 				 (float)x * CELL_SIZE,
-				-(float)y * CELL_SIZE * tilt_factor,
+				-(float)y * CELL_SIZE * BOARD_Y_SCALE,
 			};
 			CF_V2 bottom_left = {
 				top_left.x,
-				top_left.y - CELL_SIZE * tilt_factor,
+				top_left.y - CELL_SIZE * BOARD_Y_SCALE,
 			};
 			CF_V2 bottom_right = {
 				bottom_left.x + CELL_SIZE,
@@ -105,7 +105,7 @@ draw_board(const ttchess_state_t* state, ttchess_era_t era) {
 			};
 			CF_V2 top_right = {
 				bottom_right.x,
-				bottom_right.y + CELL_SIZE * tilt_factor,
+				bottom_right.y + CELL_SIZE * BOARD_Y_SCALE,
 			};
 			cf_draw_box_fill2(top_left, bottom_left, bottom_right, top_right, 0.f);
 			cf_draw_pop_color();
@@ -117,7 +117,7 @@ draw_board(const ttchess_state_t* state, ttchess_era_t era) {
 				case TTCHESS_PIECE_PAWN: {
 					CF_V2 center = {
 						top_left.x + CELL_SIZE * 0.5f,
-						top_left.y - CELL_SIZE * 0.5f / tilt_factor,
+						top_left.y - CELL_SIZE * 0.5f / BOARD_Y_SCALE,
 					};
 					ttchess_color_t color = ttchess_pawn_color(cell->piece_id);
 					CF_Sprite* sprite = color == TTCHESS_COLOR_WHITE ? spr_white_pawn : spr_black_pawn;
@@ -157,6 +157,38 @@ update(void) {
 		draw_board(&g_state, era);
 		cf_draw_pop();
 	}
+
+	ttchess_era_t white_focus = g_state.focuses[TTCHESS_COLOR_WHITE];
+	cf_draw_push_color(CELL_WHITE);
+	cf_draw_arrow(
+		(CF_V2){
+			start_x + (board_size + BOARD_GAP) * (float)white_focus + board_size * 0.5f,
+			start_y + 60.f,
+		},
+		(CF_V2){
+			start_x + (board_size + BOARD_GAP) * (float)white_focus + board_size * 0.5f,
+			start_y + 20.f,
+		},
+		10.f,
+		20.f
+	);
+	cf_draw_pop_color();
+
+	ttchess_era_t black_era = g_state.focuses[TTCHESS_COLOR_BLACK];
+	cf_draw_push_color(CELL_BLACK);
+	cf_draw_arrow(
+		(CF_V2){
+			start_x + (board_size + BOARD_GAP) * (float)black_era + board_size * 0.5f,
+			start_y - board_size * BOARD_Y_SCALE - 60.f,
+		},
+		(CF_V2){
+			start_x + (board_size + BOARD_GAP) * (float)black_era + board_size * 0.5f,
+			start_y - board_size * BOARD_Y_SCALE - 20.f,
+		},
+		10.f,
+		20.f
+	);
+	cf_draw_pop_color();
 
 	/*cf_draw_circle2((CF_V2){ 0.f, 0.f }, 10.f, 1.f);*/
 
