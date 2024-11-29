@@ -24,6 +24,9 @@ init(int argc, const char** argv) {
 			log_warn("Could not mount %s: %s", ".", result.details);
 		}
 
+		cf_app_set_icon("/assets/icon.png");
+
+		// Write dir
 		cf_fs_set_write_directory(cf_fs_get_user_directory("bullno1", "ttchess"));
 
 		app_created = true;
