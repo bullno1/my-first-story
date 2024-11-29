@@ -3,6 +3,10 @@
 #include <bgame/allocator.h>
 #include <bgame/allocator/tracked.h>
 #include <bgame/log.h>
+#include <bgame/asset.h>
+#include <bgame/asset/sprite.h>
+#include <cute_draw.h>
+#include <cute_sprite.h>
 #include "../serialization.h"
 #include "game.h"
 
@@ -13,8 +17,18 @@ static ttchess_state_t g_state;
 
 BGAME_VAR(bserial_mem_out_t, g_saved_state) = { 0 };
 
+BGAME_VAR(bgame_asset_bundle_t*, assets_game) = NULL;
+BGAME_VAR(CF_Sprite*, spr_white_pawn) = { 0 };
+
 static void
 init(int argc, const char** argv) {
+	bgame_asset_begin_load(&assets_game);
+
+	spr_white_pawn = bgame_load_sprite(assets_game, "/assets/white-pawn.aseprite");
+	cf_sprite_set_loop(spr_white_pawn, true);
+
+	bgame_asset_end_load(assets_game);
+
 }
 
 static void
@@ -52,8 +66,14 @@ after_reload(void) {
 
 static void
 update(void) {
+	bgame_asset_check_bundle(assets_game);
+
+	cf_sprite_update(spr_white_pawn);
 	cf_app_update(NULL);
 	cf_clear_color(0.5f, 0.5f, 0.5f, 1.f);
+
+	cf_draw_sprite(spr_white_pawn);
+	cf_draw_circle2((CF_V2) { 0 }, 2.f, 1.f);
 
 	cf_app_draw_onto_screen(true);
 }
