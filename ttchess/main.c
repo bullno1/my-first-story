@@ -15,21 +15,14 @@ static void
 init(int argc, const char** argv) {
 	// Cute Framework
 	if (!app_created) {
-		int options =
-			  CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT
-			| CF_APP_OPTIONS_FILE_SYSTEM_DONT_DEFAULT_MOUNT_BIT
-			;
+		int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
 		cf_make_app(WINDOW_TITLE, 0, 0, 0, 1280, 720, options, argv[0]);
 
 		// Mount assets dir
-		char* base_dir = spnorm(cf_fs_get_base_directory());
-		char* dir = sppopn(base_dir, 2);
-		scat(dir, "/assets");
-		CF_Result result = cf_fs_mount(dir, "/assets", true);
+		CF_Result result = cf_fs_mount("./assets", "/assets", true);
 		if (result.code != CF_RESULT_SUCCESS) {
-			log_warn("Could not mount %s: %s", dir, result.details);
+			log_warn("Could not mount %s: %s", ".", result.details);
 		}
-		sfree(dir);
 
 		cf_fs_set_write_directory(cf_fs_get_user_directory("bullno1", "ttchess"));
 

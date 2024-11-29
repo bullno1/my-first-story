@@ -23,14 +23,10 @@ init(int argc, const char** argv) {
 		cf_make_app(WINDOW_TITLE, 0, 0, 0, 1280, 720, options, argv[0]);
 
 		// Mount assets dir
-		char* base_dir = spnorm(cf_fs_get_base_directory());
-		char* dir = sppopn(base_dir, 2);
-		scat(dir, "/assets");
-		CF_Result result = cf_fs_mount(dir, "/assets", true);
+		CF_Result result = cf_fs_mount("./assets", "/assets", true);
 		if (result.code != CF_RESULT_SUCCESS) {
-			log_warn("Could not mount %s: %s", dir, result.details);
+			log_warn("Could not mount %s: %s", ".", result.details);
 		}
-		sfree(dir);
 
 		app_created = true;
 	}

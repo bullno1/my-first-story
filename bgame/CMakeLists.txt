@@ -11,6 +11,7 @@ set(SOURCES
 	"src/ui.c"
 	"src/asset.c"
 	"src/asset/9patch.c"
+	"src/asset/sprite.c"
 	"src/internal.c"
 )
 

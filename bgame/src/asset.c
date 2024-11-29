@@ -274,23 +274,25 @@ bgame_asset_load_impl(
 		asset->dynamic = !bundle->loading;
 #if BGAME_RELOADABLE
 		const char* actual_path = cf_fs_get_actual_path(path);
-		const char* basename = strrchr(path, '/');
-		if (basename == NULL) {
-			basename = path;
-		}
-		size_t actual_path_len = strlen(actual_path);
-		size_t basename_len = strlen(basename);
-		size_t watch_name_len = actual_path_len + basename_len + 1;
-		char* watch_name = bgame_alloc_for_frame(watch_name_len, _Alignof(char));
-		memcpy(watch_name, actual_path, actual_path_len);
-		memcpy(watch_name + actual_path_len, basename, basename_len);
-		watch_name[watch_name_len] = '\0';
+		if (actual_path != NULL) {
+			const char* basename = strrchr(path, '/');
+			if (basename == NULL) {
+				basename = path;
+			}
+			size_t actual_path_len = strlen(actual_path);
+			size_t basename_len = strlen(basename);
+			size_t watch_name_len = actual_path_len + basename_len + 1;
+			char* watch_name = bgame_alloc_for_frame(watch_name_len, _Alignof(char));
+			memcpy(watch_name, actual_path, actual_path_len);
+			memcpy(watch_name + actual_path_len, basename, basename_len);
+			watch_name[watch_name_len] = '\0';
 
-		asset->watch = bresmon_watch(bundle->monitor, watch_name, bgame_asset_on_file_changed, asset);
-		if (asset->watch) {
-			log_debug("Watching %s", watch_name);
-		} else {
-			log_warn("Could not watch %s", watch_name);
+			asset->watch = bresmon_watch(bundle->monitor, watch_name, bgame_asset_on_file_changed, asset);
+			if (asset->watch) {
+				log_debug("Watching %s", watch_name);
+			} else {
+				log_warn("Could not watch %s", watch_name);
+			}
 		}
 #endif
 		log_debug("Created new %s for %s: %p", type->name, path, (void*)asset);
