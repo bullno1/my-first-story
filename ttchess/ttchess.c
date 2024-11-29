@@ -34,11 +34,6 @@ ttchess_pawn_board(ttchess_state_t* state, int8_t pawn_id) {
 	}
 }
 
-static inline ttchess_color_t
-ttchess_pawn_color(int8_t pawn_id) {
-	return pawn_id < TTCHESS_FIRST_BLACK_PAWN ? TTCHESS_COLOR_WHITE : TTCHESS_COLOR_BLACK;
-}
-
 static inline void
 ttchess_state_reindex(ttchess_state_t* state) {
 	// Reset boards

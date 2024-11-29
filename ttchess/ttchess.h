@@ -144,4 +144,9 @@ ttchess_apply_move(ttchess_state_t* state, ttchess_move_t move);
 bserial_status_t
 ttchess_serialize(bserial_ctx_t* ctx, ttchess_state_t* state);
 
+static inline ttchess_color_t
+ttchess_pawn_color(int8_t pawn_id) {
+	return pawn_id < TTCHESS_FIRST_BLACK_PAWN ? TTCHESS_COLOR_WHITE : TTCHESS_COLOR_BLACK;
+}
+
 #endif
