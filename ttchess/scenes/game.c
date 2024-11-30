@@ -40,10 +40,12 @@ static ttchess_state_t g_state;
 BGAME_VAR(bserial_mem_out_t, g_saved_state) = { 0 };
 
 BGAME_VAR(bgame_asset_bundle_t*, assets_game) = NULL;
-BGAME_VAR(CF_Sprite*, spr_white_pawn) = { 0 };
-BGAME_VAR(CF_Sprite*, spr_black_pawn) = { 0 };
 BGAME_VAR(CF_Canvas, canvas_glow) = { 0 };
 BGAME_VAR(CF_Shader, shd_glow) = { 0 };
+
+CF_Sprite* spr_white_pawn = NULL;
+CF_Sprite* spr_black_pawn = NULL;
+CF_Sprite* spr_statue = NULL;
 
 static void
 init(int argc, const char** argv) {
@@ -56,6 +58,9 @@ init(int argc, const char** argv) {
 	spr_black_pawn = bgame_load_sprite(assets_game, "/assets/black-pawn.aseprite");
 	spr_black_pawn->scale = (CF_V2) { 0.25f, 0.25f };
 	cf_sprite_set_loop(spr_black_pawn, true);
+
+	spr_statue = bgame_load_sprite(assets_game, "/assets/statue.aseprite");
+	spr_statue->scale = (CF_V2) { 1.5f, 1.5f };
 
 	bgame_asset_end_load(assets_game);
 
@@ -158,14 +163,14 @@ draw_board(const ttchess_state_t* state, ttchess_era_t era) {
 			}
 
 			const ttchess_cell_t* cell = &board->cells[x][y];
+			CF_V2 center = {
+				top_left.x + CELL_SIZE * 0.5f,
+				top_left.y - CELL_SIZE * 0.5f / BOARD_Y_SCALE,
+			};
 			switch (cell->piece_type) {
 				case TTCHESS_PIECE_NONE:
 					break;
 				case TTCHESS_PIECE_PAWN: {
-					CF_V2 center = {
-						top_left.x + CELL_SIZE * 0.5f,
-						top_left.y - CELL_SIZE * 0.5f / BOARD_Y_SCALE,
-					};
 					ttchess_color_t color = ttchess_pawn_color(cell->piece_id);
 					CF_Sprite* sprite = color == TTCHESS_COLOR_WHITE ? spr_white_pawn : spr_black_pawn;
 					sprite->transform.p = center;
@@ -176,6 +181,10 @@ draw_board(const ttchess_state_t* state, ttchess_era_t era) {
 					}
 				} break;
 				case TTCHESS_PIECE_STATUE:
+					BGAME_SCOPE(cf_draw_push_layer(RENDER_LAYER_PIECES), cf_draw_pop_layer()) {
+						spr_statue->transform.p = center;
+						cf_draw_sprite(spr_statue);
+					}
 					break;
 			}
 		}
@@ -272,6 +281,7 @@ update(void) {
 		cf_draw_pop_shader();
 	}
 
+	// Everything else
 	cf_app_draw_onto_screen(false);
 }
 

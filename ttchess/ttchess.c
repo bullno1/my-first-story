@@ -39,12 +39,12 @@ ttchess_state_reindex(ttchess_state_t* state) {
 	// Reset boards
 	for (int era = 0; era < TTCHESS_NUM_ERAS; ++era) {
 		ttchess_board_t* board = &state->boards[era];
+		board->num_pawns[TTCHESS_COLOR_WHITE] = 0;
+		board->num_pawns[TTCHESS_COLOR_BLACK] = 0;
 
 		for (int x = 0; x < TTCHESS_BOARD_WIDTH; ++x) {
 			for (int y = 0; y < TTCHESS_BOARD_HEIGHT; ++y) {
 				board->cells[x][y].piece_type = TTCHESS_PIECE_NONE;
-				board->num_pawns[TTCHESS_COLOR_WHITE] = 0;
-				board->num_pawns[TTCHESS_COLOR_BLACK] = 0;
 			}
 		}
 	}
@@ -786,7 +786,7 @@ ttchess_serialize(bserial_ctx_t* ctx, ttchess_state_t* state) {
 			ttchess_config_t config = state->config;
 			BSERIAL_RECORD(ctx, &config) {
 				BSERIAL_KEY(ctx, with_statues) {
-					BSERIAL_CHECK_STATUS(bserial_bool(ctx, &state->config.with_statues));
+					BSERIAL_CHECK_STATUS(bserial_bool(ctx, &config.with_statues));
 				}
 			}
 			state->config = config;

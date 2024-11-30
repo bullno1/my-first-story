@@ -3,3 +3,7 @@
 * white-pawn.aseprite
 * black-pawn.aseprite
 * icon.png
+
+# https://danieldiggle.itch.io/sunnyside
+
+* statue.aseprite

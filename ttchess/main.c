@@ -4,6 +4,7 @@
 #include <bgame/allocator/tracked.h>
 #include <cute_app.h>
 #include <cute_file_system.h>
+#include <cute_graphics.h>
 #include <stdbool.h>
 #include "scenes/game.h"
 
@@ -25,6 +26,7 @@ init(int argc, const char** argv) {
 		}
 
 		cf_app_set_icon("/assets/icon.png");
+		cf_app_init_imgui();
 
 		// Write dir
 		cf_fs_set_write_directory(cf_fs_get_user_directory("bullno1", "ttchess"));
