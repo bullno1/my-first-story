@@ -3,6 +3,7 @@
 #include <bgame/allocator/tracked.h>
 #include <bgame/scene.h>
 #include <bgame/log.h>
+#include <cute_graphics.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include <cute_app.h>
@@ -28,6 +29,9 @@ init(int argc, const char** argv) {
 			log_warn("Could not mount %s: %s", ".", result.details);
 		}
 
+		cf_app_init_imgui();
+		cf_shader_directory("/assets");
+
 		app_created = true;
 	}
 
@@ -36,7 +40,7 @@ init(int argc, const char** argv) {
 	cf_app_set_title(WINDOW_TITLE);
 
 	if (bgame_current_scene() == NULL) {
-		bgame_set_scene("main_scene");
+		bgame_set_scene("shader_test");
 	}
 }
 

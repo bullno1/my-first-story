@@ -18,7 +18,7 @@ BGAME_DECLARE_TRACKED_ALLOCATOR(main_scene_alloc)
 
 typedef BHASH_TABLE(const char*, CF_Sprite) sprite_table_t;
 
-BGAME_VAR(CF_Sprite, sprite) = { 0 };
+BGAME_VAR(CF_Sprite, test_sprite) = { 0 };
 BGAME_VAR(sprite_table_t, sprite_instances) = { 0 };
 
 BGAME_VAR(bgame_asset_bundle_t*, main_scene_assets) = NULL;
@@ -47,8 +47,8 @@ compare_anim_names(const void* lhs, const void* rhs) {
 
 static void
 init(int argc, const char** argv) {
-	if (!sprite.name) {
-		sprite = cf_make_demo_sprite();
+	if (!test_sprite.name) {
+		test_sprite = cf_make_demo_sprite();
 	}
 
 	bhash_config_t config = bhash_config_default();
@@ -176,12 +176,12 @@ update(void) {
 				// Create a separate instance for each animation
 				// This has to be done in a separate pass since the sprite address
 				// can change.
-				for (int i = 0; i < hsize(sprite.animations); ++i) {
-					const CF_Animation* animation = sprite.animations[i];
+				for (int i = 0; i < hsize(test_sprite.animations); ++i) {
+					const CF_Animation* animation = test_sprite.animations[i];
 					const char* anim_name = animation->name;
 
 					if (!bhash_is_valid(bhash_find(&sprite_instances, anim_name))) {
-						bhash_put(&sprite_instances, anim_name, sprite);
+						bhash_put(&sprite_instances, anim_name, test_sprite);
 						bhash_index_t index = bhash_find(&sprite_instances, anim_name);
 						cf_sprite_play(&sprite_instances.values[index], anim_name);
 					}

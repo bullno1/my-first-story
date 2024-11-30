@@ -1,0 +1,21 @@
+layout (set = 3, binding = 1) uniform shd_uniforms {
+    float thickness;
+};
+
+vec4 shader(vec4 color, vec2 pos, vec2 screen_uv, vec4 params) {
+	float alpha = 0.0;
+	float infinity = 1.0 / 0.0;
+	float distance_squared = infinity;
+	for (float delta_x = -thickness; delta_x < thickness; delta_x += 1.0) {
+		for (float delta_y = -thickness; delta_y < thickness; delta_y += 1.0) {
+			vec2 sample_point = vec2(
+				v_uv.x * u_texture_size.x + delta_x,
+				v_uv.y * u_texture_size.y + delta_y
+			);
+			vec4 ref = texture(u_image, sample_point / u_texture_size);
+			distance_squared = min(distance_squared, ref.a > 0.0 ? (delta_x * delta_x + delta_y * delta_y) : infinity);
+		}
+	}
+
+	return vec4(color.rgb, 1.0 / distance_squared);
+}
